@@ -55,3 +55,24 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
       'ID': { title: [{ text: { content: `TS-${Date.now().toString().slice(-4)}` } }] },
       'Status': { select: { name: 'Open' } },
       'Aplicação/Jogo': { rich_text: [{ text: { content: jogo } }] },
+      'Email': { email: email },
+      'Discord Ticket': { rich_text: [{ text: { content: ticket } }] },
+      'Região': { rich_text: [{ text: { content: regiao } }] },
+      'Categoria': { select: { name: categoria } },
+      'Request': { rich_text: [{ text: { content: request } }] },
+      'URL': { url: url },
+      'Assigned By': { rich_text: [{ text: { content: user } }] },
+      'Criação': { date: { start: new Date().toISOString().split('T')[0] } },
+    }
+  });
+
+  await client.chat.postMessage({
+    channel: body.user.id,
+    text: `✅ Ticket criado!\n*Jogo:* ${jogo}\n*Categoria:* ${categoria}\n*Email:* ${email}`
+  });
+});
+
+(async () => {
+  await app.start(process.env.PORT || 3000);
+  console.log('GamesBot rodando!');
+})();
