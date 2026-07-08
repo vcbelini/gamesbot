@@ -120,8 +120,16 @@ app.view('step1_categoria', async ({ ack, body, view, client }) => {
         },
         {
           type: 'input',
-          block_id: 'ticket',
-          element: { type: 'plain_text_input', action_id: 'value', placeholder: { type: 'plain_text', text: 'Tech-0063' } },
+          block_id: 'id_ticket',
+          optional: true,
+          element: { type: 'plain_text_input', action_id: 'value', placeholder: { type: 'plain_text', text: '' } },
+          label: { type: 'plain_text', text: 'ID Ticket (site ExitLag)' }
+        },
+        {
+          type: 'input',
+          block_id: 'discord_ticket',
+          optional: true,
+          element: { type: 'plain_text_input', action_id: 'value', placeholder: { type: 'plain_text', text: '' } },
           label: { type: 'plain_text', text: 'Discord Ticket' }
         },
         {
@@ -194,7 +202,8 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
   const jogo = v.jogo.value.value;
   const email = v.email.value.value;
   const url = v.url.value.value;
-  const ticket = v.ticket.value.value;
+  const id_ticket = v.id_ticket.value.value || '';
+  const discord_ticket = v.discord_ticket.value.value || '';
   const regiao = v.regiao.value.value;
   const servidor = v.servidor.value.selected_option.value;
   const link_private = v.link_private.value.value || '';
@@ -211,7 +220,8 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
       'Testes Realizados': { rich_text: [{ text: { content: testes } }] },
       'Aplicacao/Jogo': { rich_text: [{ text: { content: jogo } }] },
       'Email': { email: email },
-      'Discord Ticket': { rich_text: [{ text: { content: ticket } }] },
+      'Ticket Number': { rich_text: [{ text: { content: id_ticket } }] },
+      'Discord Ticket': { rich_text: [{ text: { content: discord_ticket } }] },
       'Regiao': { rich_text: [{ text: { content: regiao } }] },
       'Tipo do Servidor': { select: { name: servidor } },
       'URL': { url: url },
