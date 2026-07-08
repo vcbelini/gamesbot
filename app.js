@@ -29,9 +29,9 @@ app.command('/gs', async ({ ack, body, client }) => {
             action_id: 'value',
             placeholder: { type: 'plain_text', text: 'Selecionar categoria...' },
             options: [
-              { text: { type: 'plain_text', text: '🌐 Acesso / Conectividade' }, value: 'Acesso / Conectividade' },
-              { text: { type: 'plain_text', text: '📉 Rota / Performance' }, value: 'Rota / Performance' },
-              { text: { type: 'plain_text', text: '🚫 Bloqueio / Autenticação' }, value: 'Bloqueio / Autenticação' },
+              { text: { type: 'plain_text', text: 'Acesso / Conectividade' }, value: 'Acesso / Conectividade' },
+              { text: { type: 'plain_text', text: 'Rota / Performance' }, value: 'Rota / Performance' },
+              { text: { type: 'plain_text', text: 'Bloqueio / Autenticacao' }, value: 'Bloqueio / Autenticacao' }
             ]
           },
           label: { type: 'plain_text', text: 'Categoria' }
@@ -43,20 +43,20 @@ app.command('/gs', async ({ ack, body, client }) => {
             type: 'checkboxes',
             action_id: 'value',
             options: [
-              { text: { type: 'plain_text', text: 'Com / sem ExitLag' }, value: 'Com / sem ExitLag' },
+              { text: { type: 'plain_text', text: 'Com / sem ExitLag' }, value: 'Com/sem ExitLag' },
               { text: { type: 'plain_text', text: 'WFP' }, value: 'WFP' },
               { text: { type: 'plain_text', text: 'NDIS Legacy' }, value: 'NDIS Legacy' },
               { text: { type: 'plain_text', text: 'Redirect Login' }, value: 'Redirect Login' },
               { text: { type: 'plain_text', text: 'ExitLag ON/OFF' }, value: 'ExitLag ON/OFF' },
-              { text: { type: 'plain_text', text: 'Testado em outras rotas' }, value: 'Testado em outras rotas' },
-              { text: { type: 'plain_text', text: 'Diagnóstico de 15 minutos' }, value: 'Diagnóstico de 15 minutos' },
+              { text: { type: 'plain_text', text: 'Testado em outras rotas' }, value: 'Outras rotas' },
+              { text: { type: 'plain_text', text: 'Diagnostico 15 minutos' }, value: 'Diagnostico 15min' },
               { text: { type: 'plain_text', text: 'Reset Network' }, value: 'Reset Network' },
-              { text: { type: 'plain_text', text: 'Config 1 TCP / 3 UDP' }, value: 'Config 1 TCP / 3 UDP' },
-              { text: { type: 'plain_text', text: 'Instalação limpa do ExitLag' }, value: 'Instalação limpa do ExitLag' },
-              { text: { type: 'plain_text', text: 'Com / sem VPN' }, value: 'Com / sem VPN' },
-              { text: { type: 'plain_text', text: 'Teste sem IPv6' }, value: 'Teste sem IPv6' },
-              { text: { type: 'plain_text', text: 'Adicionado Launcher do game' }, value: 'Adicionado Launcher do game' },
-              { text: { type: 'plain_text', text: 'Redirect DNS' }, value: 'Redirect DNS' },
+              { text: { type: 'plain_text', text: 'Config 1 TCP / 3 UDP' }, value: '1TCP 3UDP' },
+              { text: { type: 'plain_text', text: 'Instalacao limpa ExitLag' }, value: 'Instalacao limpa' },
+              { text: { type: 'plain_text', text: 'Com / sem VPN' }, value: 'Com/sem VPN' },
+              { text: { type: 'plain_text', text: 'Teste sem IPv6' }, value: 'Sem IPv6' },
+              { text: { type: 'plain_text', text: 'Launcher do game' }, value: 'Launcher game' },
+              { text: { type: 'plain_text', text: 'Redirect DNS' }, value: 'Redirect DNS' }
             ]
           },
           label: { type: 'plain_text', text: 'Testes realizados' }
@@ -84,7 +84,7 @@ app.command('/gs', async ({ ack, body, client }) => {
           type: 'input',
           block_id: 'regiao',
           element: { type: 'plain_text_input', action_id: 'value', placeholder: { type: 'plain_text', text: 'Ex: Brasil' } },
-          label: { type: 'plain_text', text: 'Região' }
+          label: { type: 'plain_text', text: 'Regiao' }
         },
         {
           type: 'input',
@@ -95,7 +95,7 @@ app.command('/gs', async ({ ack, body, client }) => {
             placeholder: { type: 'plain_text', text: 'Selecionar...' },
             options: [
               { text: { type: 'plain_text', text: 'Official Server' }, value: 'Official Server' },
-              { text: { type: 'plain_text', text: 'Private Server' }, value: 'Private Server' },
+              { text: { type: 'plain_text', text: 'Private Server' }, value: 'Private Server' }
             ]
           },
           label: { type: 'plain_text', text: 'Tipo de servidor' }
@@ -116,7 +116,7 @@ app.command('/gs', async ({ ack, body, client }) => {
           type: 'input',
           block_id: 'request',
           element: { type: 'plain_text_input', action_id: 'value', multiline: true, placeholder: { type: 'plain_text', text: 'Descreva o problema...' } },
-          label: { type: 'plain_text', text: 'Descrição detalhada' }
+          label: { type: 'plain_text', text: 'Descricao detalhada' }
         },
         {
           type: 'input',
@@ -128,13 +128,13 @@ app.command('/gs', async ({ ack, body, client }) => {
             options: [
               { text: { type: 'plain_text', text: 'Diego' }, value: 'Diego' },
               { text: { type: 'plain_text', text: 'Evan' }, value: 'Evan' },
-              { text: { type: 'plain_text', text: 'Marcão' }, value: 'Marcão' },
+              { text: { type: 'plain_text', text: 'Marcao' }, value: 'Marcao' },
               { text: { type: 'plain_text', text: 'Thay' }, value: 'Thay' },
-              { text: { type: 'plain_text', text: 'Vinicyus' }, value: 'Vinicyus' },
+              { text: { type: 'plain_text', text: 'Vinicyus' }, value: 'Vinicyus' }
             ]
           },
-          label: { type: 'plain_text', text: 'Analista responsável' }
-        },
+          label: { type: 'plain_text', text: 'Analista responsavel' }
+        }
       ]
     }
   });
@@ -149,4 +149,39 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
   const email = v.email.value.value;
   const ticket = v.ticket.value.value;
   const regiao = v.regiao.value.value;
-  const servidor = v.servidor.value.selected_option.value
+  const servidor = v.servidor.value.selected_option.value;
+  const url = v.url.value.value;
+  const gb = v.gb.value.value;
+  const request = v.request.value.value;
+  const analista = v.analista.value.selected_option.value;
+
+  await notion.pages.create({
+    parent: { database_id: DATABASE_ID },
+    properties: {
+      'ID': { title: [{ text: { content: 'TS-' + Date.now().toString().slice(-4) } }] },
+      'Status': { select: { name: 'Open' } },
+      'Categoria': { select: { name: categoria } },
+      'Testes Realizados': { rich_text: [{ text: { content: testes } }] },
+      'Aplicacao/Jogo': { rich_text: [{ text: { content: jogo } }] },
+      'Email': { email: email },
+      'Discord Ticket': { rich_text: [{ text: { content: ticket } }] },
+      'Regiao': { rich_text: [{ text: { content: regiao } }] },
+      'Tipo do Servidor': { select: { name: servidor } },
+      'URL': { url: url },
+      'GB Analytics': { url: gb },
+      'Request': { rich_text: [{ text: { content: request } }] },
+      'Assigned By': { rich_text: [{ text: { content: analista } }] },
+      'Criacao': { date: { start: new Date().toISOString().split('T')[0] } }
+    }
+  });
+
+  await client.chat.postMessage({
+    channel: body.user.id,
+    text: 'Ticket criado!\nJogo: ' + jogo + '\nCategoria: ' + categoria + '\nAnalista: ' + analista
+  });
+});
+
+(async () => {
+  await app.start(process.env.PORT || 3000);
+  console.log('GamesBot rodando!');
+})();
