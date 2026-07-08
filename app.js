@@ -75,7 +75,7 @@ app.view('step1_categoria', async ({ ack, body, view, client }) => {
   const testes = testesPorCategoria[categoria];
 
   await ack({
-    response_action: 'push',
+    response_action: 'update',
     view: {
       type: 'modal',
       callback_id: 'submit_ticket',
