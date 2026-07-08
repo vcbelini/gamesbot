@@ -49,13 +49,9 @@ app.command('/gs', async ({ ack, body, client }) => {
               { text: { type: 'plain_text', text: 'Redirect Login' }, value: 'Redirect Login' },
               { text: { type: 'plain_text', text: 'ExitLag ON/OFF' }, value: 'ExitLag ON/OFF' },
               { text: { type: 'plain_text', text: 'Testado em outras rotas' }, value: 'Outras rotas' },
-              { text: { type: 'plain_text', text: 'Diagnostico 15 minutos' }, value: 'Diagnostico 15min' },
               { text: { type: 'plain_text', text: 'Reset Network' }, value: 'Reset Network' },
               { text: { type: 'plain_text', text: 'Config 1 TCP / 3 UDP' }, value: '1TCP 3UDP' },
-              { text: { type: 'plain_text', text: 'Instalacao limpa ExitLag' }, value: 'Instalacao limpa' },
               { text: { type: 'plain_text', text: 'Com / sem VPN' }, value: 'Com/sem VPN' },
-              { text: { type: 'plain_text', text: 'Teste sem IPv6' }, value: 'Sem IPv6' },
-              { text: { type: 'plain_text', text: 'Launcher do game' }, value: 'Launcher game' },
               { text: { type: 'plain_text', text: 'Redirect DNS' }, value: 'Redirect DNS' }
             ]
           },
