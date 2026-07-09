@@ -37,8 +37,15 @@ const testesPorCategoria = {
 
 const ticketMap = {};
 
+function getTodayBRT() {
+  const now = new Date();
+  const brt = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+  return brt.toISOString().split('T')[0];
+}
+
 function buildModal2(categoria) {
   const testes = testesPorCategoria[categoria];
+  const today = getTodayBRT();
   return {
     type: 'modal',
     callback_id: 'submit_ticket',
@@ -50,7 +57,9 @@ function buildModal2(categoria) {
       { type: 'section', text: { type: 'mrkdwn', text: '*Categoria:* ' + categoria } },
       { type: 'input', block_id: 'testes', optional: true, element: { type: 'checkboxes', action_id: 'value', options: testes }, label: { type: 'plain_text', text: 'Testes realizados' } },
       { type: 'divider' },
+      { type: 'input', block_id: 'solicitacao', optional: true, element: { type: 'datepicker', action_id: 'value', initial_date: today, placeholder: { type: 'plain_text', text: 'Selecionar data' } }, label: { type: 'plain_text', text: 'Data de solicitacao' } },
       { type: 'input', block_id: 'jogo', element: { type: 'plain_text_input', action_id: 'value', placeholder: { type: 'plain_text', text: 'Ex: Valorant' } }, label: { type: 'plain_text', text: 'Nome do jogo' } },
+      { type: 'input', block_id: 'client', element: { type: 'static_select', action_id: 'value', placeholder: { type: 'plain_text', text: 'Selecionar OS...' }, options: [{ text: { type: 'plain_text', text: 'Windows' }, value: 'Windows' }, { text: { type: 'plain_text', text: 'Android' }, value: 'Android' }, { text: { type: 'plain_text', text: 'iOS' }, value: 'iOS' }, { text: { type: 'plain_text', text: 'Site' }, value: 'Site' }] }, label: { type: 'plain_text', text: 'Client' } },
       { type: 'input', block_id: 'email', element: { type: 'plain_text_input', action_id: 'value', placeholder: { type: 'plain_text', text: 'cliente@email.com' } }, label: { type: 'plain_text', text: 'Email do cliente' } },
       { type: 'input', block_id: 'url', element: { type: 'plain_text_input', action_id: 'value', placeholder: { type: 'plain_text', text: 'https://...' } }, label: { type: 'plain_text', text: 'Link do ticket' } },
       { type: 'input', block_id: 'id_ticket', optional: true, element: { type: 'plain_text_input', action_id: 'value' }, label: { type: 'plain_text', text: 'Ticket Number' } },
@@ -98,7 +107,9 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
   const testes = testesArr.map(o => o.value).join(', ') || 'Nenhum';
   const tagsArr = (v.tags.value && v.tags.value.selected_options) ? v.tags.value.selected_options : [];
   const tags = tagsArr.map(o => o.value);
+  const solicitacao = (v.solicitacao.value && v.solicitacao.value.selected_date) ? v.solicitacao.value.selected_date : getTodayBRT();
   const jogo = v.jogo.value.value;
+  const clientOS = v.client.value.selected_option.value;
   const email = v.email.value.value;
   const url = v.url.value.value;
   const id_ticket = (v.id_ticket.value && v.id_ticket.value.value) || '';
@@ -111,8 +122,6 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
   const request = v.request.value.value;
   const analista = v.analista.value.selected_option.value;
   const tsId = 'TS-' + Date.now().toString().slice(-4);
-  const userId = body.user.id;
-  const channelId = body.user.id;
 
   const notionPage = await notion.pages.create({
     parent: { database_id: DATABASE_ID },
@@ -121,7 +130,9 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
       'Status': { select: { name: 'Open' } },
       'Categoria': { select: { name: categoria } },
       'Testes Realizados': { rich_text: [{ text: { content: testes } }] },
-      'Aplicacao/Jogo': { rich_text: [{ text: { content: jogo } }] },
+      'Solicitação': { date: { start: solicitacao } },
+      'Aplicacao': { rich_text: [{ text: { content: jogo } }] },
+      'Client': { select: { name: clientOS } },
       'Email': { email: email },
       'Ticket Number': { rich_text: [{ text: { content: id_ticket } }] },
       'Discord Ticket': { rich_text: [{ text: { content: discord_ticket } }] },
@@ -133,7 +144,7 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
       'Tags': { multi_select: tags.map(t => ({ name: t })) },
       'Request': { rich_text: [{ text: { content: request } }] },
       'Assigned By': { rich_text: [{ text: { content: analista } }] },
-      'Criacao': { date: { start: new Date().toISOString().split('T')[0] } }
+      'Criação': { date: { start: new Date().toISOString().split('T')[0] } }
     }
   });
 
@@ -143,7 +154,7 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
     blocks: [
       { type: 'section', text: { type: 'mrkdwn', text: '*@gamessupport* um novo ticket foi criado! :thumbsup:' } },
       { type: 'section', text: { type: 'mrkdwn', text: '*This document has been added to the Notion database*' } },
-      { type: 'section', text: { type: 'mrkdwn', text: ':file_folder: *Document Page* - ' + tsId + '\n• *Assigned by:* ' + analista + '\n• *Aplicacao:* ' + jogo + '\n• *Email:* ' + email + '\n• *Ticket Number:* ' + (id_ticket || 'empty') + '\n• *Discord Ticket:* ' + (discord_ticket || 'empty') + '\n• *Categoria:* ' + categoria + '\n• *ISP:* ' + (isp || 'empty') + '\n• *Regiao:* ' + regiao + '\n• *Tipo Servidor:* ' + servidor + '\n• *Testes:* ' + testes } },
+      { type: 'section', text: { type: 'mrkdwn', text: ':file_folder: *Document Page* - ' + tsId + '\n• *Assigned by:* ' + analista + '\n• *Aplicacao:* ' + jogo + '\n• *Client:* ' + clientOS + '\n• *Email:* ' + email + '\n• *Ticket Number:* ' + (id_ticket || 'empty') + '\n• *Discord Ticket:* ' + (discord_ticket || 'empty') + '\n• *Categoria:* ' + categoria + '\n• *ISP:* ' + (isp || 'empty') + '\n• *Regiao:* ' + regiao + '\n• *Tipo Servidor:* ' + servidor + '\n• *Testes:* ' + testes } },
       { type: 'section', text: { type: 'mrkdwn', text: ':notepad_spiral: *Request:*\n' + request } },
       { type: 'section', text: { type: 'mrkdwn', text: '_Use o comando_ `$done` _nesta thread para finalizar o ticket._' } },
     ]
@@ -167,7 +178,7 @@ app.message(/^\$done$/i, async ({ message, client, say }) => {
     page_id: notionPageId,
     properties: {
       'Status': { select: { name: 'Done' } },
-      'Finalizacao': { date: { start: new Date().toISOString() } }
+      'Finalização': { date: { start: new Date().toISOString() } }
     }
   });
   await client.reactions.add({ channel: message.channel, name: 'white_check_mark', timestamp: message.ts });
