@@ -274,7 +274,7 @@ app.message(/^\$done$/i, async ({ message, client, say }) => {
     page_id: notionPageId,
     properties: {
       'Status': { select: { name: 'Done' } },
-      'Finalização': { date: { start: new Date().toISOString() } }
+      'Finalização': { date: { start: new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') } }
     }
   });
   await client.reactions.add({ channel: message.channel, name: 'white_check_mark', timestamp: message.ts });
