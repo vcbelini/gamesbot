@@ -184,6 +184,14 @@ app.event('message', async ({ event, client }) => {
 
     const now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 
+    // Atualiza status para In Progress quando alguem responde na thread
+    try {
+      await notion.pages.update({
+        page_id: notionPageId,
+        properties: { 'Status': { select: { name: 'In Progress' } } }
+      });
+    } catch (e) {}
+
     // Mensagem de texto
     if (event.text && event.text.trim() && !/^\$done$/i.test(event.text.trim())) {
       await notion.comments.create({
