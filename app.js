@@ -155,7 +155,7 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
       { type: 'section', text: { type: 'mrkdwn', text: '*@gamessupport* um novo ticket foi criado! :thumbsup:' } },
       { type: 'section', text: { type: 'mrkdwn', text: '*This document has been added to the Notion database*' } },
       { type: 'section', text: { type: 'mrkdwn', text: ':file_folder: *Document Page* - ' + tsId + '\n• *Assigned by:* ' + analista + '\n• *Aplicacao:* ' + jogo + '\n• *Client:* ' + clientOS + '\n• *Email:* ' + email + '\n• *Ticket Number:* ' + (id_ticket || 'empty') + '\n• *Discord Ticket:* ' + (discord_ticket || 'empty') + '\n• *Categoria:* ' + categoria + '\n• *ISP:* ' + (isp || 'empty') + '\n• *Regiao:* ' + regiao + '\n• *Tipo Servidor:* ' + servidor + '\n• *Testes:* ' + testes } },
-      { type: 'section', text: { type: 'mrkdwn', text: ':notepad_spiral: *Request:*\n' + request } },
+      { type: 'section', text: { type: 'mrkdwn', text: '📋 *Request:*\n' + request } },
       { type: 'section', text: { type: 'mrkdwn', text: '_Use o comando_ `$done` _nesta thread para finalizar o ticket._' } },
     ]
   });
