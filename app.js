@@ -36,6 +36,30 @@ const testesPorCategoria = {
 };
 
 const ticketMap = {};
+const timerMap = {};
+
+const TEMPO_AVISO = 30 * 1000; // 30 segundos para demo — mudar para horas em producao
+
+function agendarAviso(threadTs, channelId) {
+  // Cancela timer anterior se existir
+  if (timerMap[threadTs]) {
+    clearTimeout(timerMap[threadTs]);
+  }
+  // Agenda novo aviso
+  timerMap[threadTs] = setTimeout(async () => {
+    if (!ticketMap[threadTs]) return; // Ticket ja foi finalizado
+    try {
+      await app.client.chat.postMessage({
+        token: process.env.SLACK_BOT_TOKEN,
+        channel: channelId,
+        thread_ts: threadTs,
+        text: '⚠️ *Lembrete:* Este ticket está sem interação na thread. Alguém pode verificar?'
+      });
+    } catch (e) {
+      console.error('Erro ao enviar aviso de inatividade:', e.message);
+    }
+  }, TEMPO_AVISO);
+}
 
 function getTodayBRT() {
   const now = new Date();
@@ -162,30 +186,12 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
 
   ticketMap[msg.ts] = notionPage.id;
 
-  // Timer de aviso — 30 segundos para demo (mudar para horas em producao)
-  const TEMPO_AVISO = 30 * 1000;
-  const threadTs = msg.ts;
-  const channelId = msg.channel;
-
-  setTimeout(async () => {
-    if (!ticketMap[threadTs]) return;
-    try {
-      await app.client.chat.postMessage({
-        token: process.env.SLACK_BOT_TOKEN,
-        channel: channelId,
-        thread_ts: threadTs,
-        text: "⚠️ *Lembrete:* Este ticket ainda nao teve nenhuma interacao na thread. Alguem pode verificar?"
-      });
-    } catch (e) {
-      console.error("Erro ao enviar aviso de inatividade:", e.message);
-    }
-  }, TEMPO_AVISO);
+  // Agenda aviso de inatividade
+  agendarAviso(msg.ts, msg.channel);
 });
 
-// Sincroniza mensagens e arquivos da thread pro Notion
 app.event('message', async ({ event, client }) => {
   try {
-    // Ignora mensagens do proprio bot, mensagens sem thread e mensagens principais
     if (event.bot_id) return;
     if (!event.thread_ts) return;
     if (event.thread_ts === event.ts) return;
@@ -194,7 +200,11 @@ app.event('message', async ({ event, client }) => {
     const notionPageId = ticketMap[event.thread_ts];
     if (!notionPageId) return;
 
-    // Busca nome do usuario
+    // Reseta o timer de inatividade a cada mensagem na thread
+    if (event.channel) {
+      agendarAviso(event.thread_ts, event.channel);
+    }
+
     let userName = event.user || 'Desconhecido';
     try {
       const userInfo = await client.users.info({ user: event.user });
@@ -203,7 +213,7 @@ app.event('message', async ({ event, client }) => {
 
     const now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 
-    // Atualiza status para In Progress quando alguem responde na thread
+    // Atualiza status para In Progress
     try {
       await notion.pages.update({
         page_id: notionPageId,
@@ -219,7 +229,7 @@ app.event('message', async ({ event, client }) => {
       });
     }
 
-    // Arquivos anexados
+    // Arquivos
     if (event.files && event.files.length > 0) {
       for (const file of event.files) {
         const tipo = file.mimetype || '';
@@ -232,7 +242,7 @@ app.event('message', async ({ event, client }) => {
           parent: { page_id: notionPageId },
           rich_text: [
             { type: 'text', text: { content: emoji + ' ' + userName + ' — ' + now + '\n' } },
-            { type: 'text', text: { content: file.name + ' | Type: ' + (file.mimetype || 'desconhecido'), link: { url: file.permalink_public || file.permalink } } }
+            { type: 'text', text: { content: file.name + ' | Type: ' + (file.mimetype || 'desconhecido'), link: { url: file.permalink } } }
           ]
         });
       }
@@ -253,6 +263,13 @@ app.message(/^\$done$/i, async ({ message, client, say }) => {
     await say({ text: 'Ticket nao encontrado. Verifique se esta na thread correta.', thread_ts: message.ts });
     return;
   }
+
+  // Cancela o timer de inatividade
+  if (timerMap[threadTs]) {
+    clearTimeout(timerMap[threadTs]);
+    delete timerMap[threadTs];
+  }
+
   await notion.pages.update({
     page_id: notionPageId,
     properties: {
