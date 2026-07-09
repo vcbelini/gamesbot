@@ -35,6 +35,8 @@ const testesPorCategoria = {
   ],
 };
 
+const ticketMap = {};
+
 function buildModal2(categoria) {
   const testes = testesPorCategoria[categoria];
   return {
@@ -54,9 +56,11 @@ function buildModal2(categoria) {
       { type: 'input', block_id: 'id_ticket', optional: true, element: { type: 'plain_text_input', action_id: 'value' }, label: { type: 'plain_text', text: 'Ticket Number' } },
       { type: 'input', block_id: 'discord_ticket', optional: true, element: { type: 'plain_text_input', action_id: 'value' }, label: { type: 'plain_text', text: 'Discord Ticket' } },
       { type: 'input', block_id: 'regiao', element: { type: 'plain_text_input', action_id: 'value', placeholder: { type: 'plain_text', text: 'Ex: Brasil' } }, label: { type: 'plain_text', text: 'Regiao' } },
+      { type: 'input', block_id: 'isp', optional: true, element: { type: 'plain_text_input', action_id: 'value', placeholder: { type: 'plain_text', text: 'Ex: Claro, Vivo, Tim...' } }, label: { type: 'plain_text', text: 'ISP' } },
       { type: 'input', block_id: 'servidor', element: { type: 'static_select', action_id: 'value', placeholder: { type: 'plain_text', text: 'Selecionar...' }, options: [{ text: { type: 'plain_text', text: 'Official Server' }, value: 'Official Server' }, { text: { type: 'plain_text', text: 'Private Server' }, value: 'Private Server' }] }, label: { type: 'plain_text', text: 'Tipo de servidor' } },
-      { type: 'input', block_id: 'link_private', optional: true, element: { type: 'plain_text_input', action_id: 'value', placeholder: { type: 'plain_text', text: '(somente Private Server)' } }, label: { type: 'plain_text', text: 'Link servidor private' } },
+      { type: 'input', block_id: 'link_private', optional: true, element: { type: 'plain_text_input', action_id: 'value', placeholder: { type: 'plain_text', text: 'somente Private Server' } }, label: { type: 'plain_text', text: 'Link servidor private' } },
       { type: 'input', block_id: 'gb', element: { type: 'plain_text_input', action_id: 'value', placeholder: { type: 'plain_text', text: 'https://...' } }, label: { type: 'plain_text', text: 'Link GB Analytics' } },
+      { type: 'input', block_id: 'tags', optional: true, element: { type: 'checkboxes', action_id: 'value', options: [{ text: { type: 'plain_text', text: 'Tecnico' }, value: 'Tecnico' }, { text: { type: 'plain_text', text: 'Adicao de jogos' }, value: 'Adicao de jogos' }, { text: { type: 'plain_text', text: 'Adicao de FS/BS' }, value: 'Adicao de FS/BS' }, { text: { type: 'plain_text', text: 'Login' }, value: 'Login' }, { text: { type: 'plain_text', text: 'Bypass' }, value: 'Bypass' }, { text: { type: 'plain_text', text: 'Outros' }, value: 'Outros' }] }, label: { type: 'plain_text', text: 'Tags' } },
       { type: 'input', block_id: 'request', element: { type: 'plain_text_input', action_id: 'value', multiline: true, placeholder: { type: 'plain_text', text: 'Descreva o problema...' } }, label: { type: 'plain_text', text: 'Descricao detalhada' } },
       { type: 'input', block_id: 'analista', element: { type: 'static_select', action_id: 'value', placeholder: { type: 'plain_text', text: 'Selecionar analista...' }, options: [{ text: { type: 'plain_text', text: 'Diego' }, value: 'Diego' }, { text: { type: 'plain_text', text: 'Evan' }, value: 'Evan' }, { text: { type: 'plain_text', text: 'Marcao' }, value: 'Marcao' }, { text: { type: 'plain_text', text: 'Thay' }, value: 'Thay' }, { text: { type: 'plain_text', text: 'Vinicyus' }, value: 'Vinicyus' }] }, label: { type: 'plain_text', text: 'Analista responsavel' } },
     ]
@@ -92,22 +96,28 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
   const categoria = view.private_metadata;
   const testesArr = (v.testes.value && v.testes.value.selected_options) ? v.testes.value.selected_options : [];
   const testes = testesArr.map(o => o.value).join(', ') || 'Nenhum';
+  const tagsArr = (v.tags.value && v.tags.value.selected_options) ? v.tags.value.selected_options : [];
+  const tags = tagsArr.map(o => o.value);
   const jogo = v.jogo.value.value;
   const email = v.email.value.value;
   const url = v.url.value.value;
   const id_ticket = (v.id_ticket.value && v.id_ticket.value.value) || '';
   const discord_ticket = (v.discord_ticket.value && v.discord_ticket.value.value) || '';
   const regiao = v.regiao.value.value;
+  const isp = (v.isp.value && v.isp.value.value) || '';
   const servidor = v.servidor.value.selected_option.value;
   const link_private = (v.link_private.value && v.link_private.value.value) || '';
   const gb = v.gb.value.value;
   const request = v.request.value.value;
   const analista = v.analista.value.selected_option.value;
+  const tsId = 'TS-' + Date.now().toString().slice(-4);
+  const userId = body.user.id;
+  const channelId = body.user.id;
 
-  await notion.pages.create({
+  const notionPage = await notion.pages.create({
     parent: { database_id: DATABASE_ID },
     properties: {
-      'ID': { title: [{ text: { content: 'TS-' + Date.now().toString().slice(-4) } }] },
+      'ID': { title: [{ text: { content: tsId } }] },
       'Status': { select: { name: 'Open' } },
       'Categoria': { select: { name: categoria } },
       'Testes Realizados': { rich_text: [{ text: { content: testes } }] },
@@ -116,19 +126,52 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
       'Ticket Number': { rich_text: [{ text: { content: id_ticket } }] },
       'Discord Ticket': { rich_text: [{ text: { content: discord_ticket } }] },
       'Regiao': { rich_text: [{ text: { content: regiao } }] },
+      'ISP': { rich_text: [{ text: { content: isp } }] },
       'Tipo do Servidor': { select: { name: servidor } },
       'URL': { url: url },
       'GB Analytics': { url: gb },
+      'Tags': { multi_select: tags.map(t => ({ name: t })) },
       'Request': { rich_text: [{ text: { content: request } }] },
       'Assigned By': { rich_text: [{ text: { content: analista } }] },
       'Criacao': { date: { start: new Date().toISOString().split('T')[0] } }
     }
   });
 
-  await client.chat.postMessage({
-    channel: body.user.id,
-    text: 'Ticket criado!\nJogo: ' + jogo + '\nCategoria: ' + categoria + '\nAnalista: ' + analista + '\nTestes: ' + testes
+  const msg = await client.chat.postMessage({
+    channel: 'games-suporte',
+    text: '@gamessupport um novo ticket foi criado!',
+    blocks: [
+      { type: 'section', text: { type: 'mrkdwn', text: '*@gamessupport* um novo ticket foi criado! :thumbsup:' } },
+      { type: 'section', text: { type: 'mrkdwn', text: '*This document has been added to the Notion database*' } },
+      { type: 'section', text: { type: 'mrkdwn', text: ':file_folder: *Document Page* - ' + tsId + '\n• *Assigned by:* ' + analista + '\n• *Aplicacao:* ' + jogo + '\n• *Email:* ' + email + '\n• *Ticket Number:* ' + (id_ticket || 'empty') + '\n• *Discord Ticket:* ' + (discord_ticket || 'empty') + '\n• *Categoria:* ' + categoria + '\n• *ISP:* ' + (isp || 'empty') + '\n• *Regiao:* ' + regiao + '\n• *Tipo Servidor:* ' + servidor + '\n• *Testes:* ' + testes } },
+      { type: 'section', text: { type: 'mrkdwn', text: ':notepad_spiral: *Request:*\n' + request } },
+      { type: 'section', text: { type: 'mrkdwn', text: '_Use o comando_ `$done` _nesta thread para finalizar o ticket._' } },
+    ]
   });
+
+  ticketMap[msg.ts] = notionPage.id;
+});
+
+app.message(/^\$done$/i, async ({ message, client, say }) => {
+  const threadTs = message.thread_ts;
+  if (!threadTs) {
+    await say({ text: 'Use $done dentro da thread de um ticket!', thread_ts: message.ts });
+    return;
+  }
+  const notionPageId = ticketMap[threadTs];
+  if (!notionPageId) {
+    await say({ text: 'Ticket nao encontrado. Verifique se esta na thread correta.', thread_ts: message.ts });
+    return;
+  }
+  await notion.pages.update({
+    page_id: notionPageId,
+    properties: {
+      'Status': { select: { name: 'Done' } },
+      'Finalizacao': { date: { start: new Date().toISOString() } }
+    }
+  });
+  await client.reactions.add({ channel: message.channel, name: 'white_check_mark', timestamp: message.ts });
+  delete ticketMap[threadTs];
 });
 
 (async () => {
