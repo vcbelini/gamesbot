@@ -162,7 +162,7 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
       'Tags': { multi_select: tags.map(t => ({ name: t })) },
       'Request': { rich_text: [{ text: { content: request } }] },
       'Assigned By': { rich_text: [{ text: { content: analista } }] },
-      'Criação': { date: { start: getTodayBRT() } }
+      'Criação': { date: { start: new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') } }
     }
   });
 
