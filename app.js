@@ -182,6 +182,7 @@ app.message(/^\$done$/i, async ({ message, client, say }) => {
     }
   });
   await client.reactions.add({ channel: message.channel, name: 'white_check_mark', timestamp: message.ts });
+  await client.reactions.add({ channel: message.channel, name: 'white_check_mark', timestamp: threadTs });
   delete ticketMap[threadTs];
 });
 
