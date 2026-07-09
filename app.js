@@ -209,14 +209,12 @@ app.event('message', async ({ event, client }) => {
         else if (tipo.startsWith('video/')) emoji = '🎥';
         else if (tipo.includes('text') || file.name.endsWith('.txt') || file.name.endsWith('.log')) emoji = '📄';
 
-        const comentario = emoji + ' ' + userName + ' — ' + now + '\n' +
-          'Arquivo: ' + file.name + '\n' +
-          'Tipo: ' + (file.mimetype || 'desconhecido') + '\n' +
-          'Ver no Slack: ' + file.permalink;
-
         await notion.comments.create({
           parent: { page_id: notionPageId },
-          rich_text: [{ type: 'text', text: { content: comentario } }]
+          rich_text: [
+            { type: 'text', text: { content: emoji + ' ' + userName + ' — ' + now + '\n' } },
+            { type: 'text', text: { content: file.name + ' | Type: ' + (file.mimetype || 'desconhecido'), link: { url: file.permalink } } }
+          ]
         });
       }
     }
