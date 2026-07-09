@@ -154,13 +154,67 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
     blocks: [
       { type: 'section', text: { type: 'mrkdwn', text: '*@gamessupport* um novo ticket foi criado! :thumbsup:' } },
       { type: 'section', text: { type: 'mrkdwn', text: '*This document has been added to the Notion database*' } },
-      { type: 'section', text: { type: 'mrkdwn', text: ':file_folder: *Document Page* - ' + tsId + '\n• *Assigned by:* ' + analista + '\n• *Aplicacao:* ' + jogo + '\n• *Client:* ' + clientOS + '\n• *Email:* ' + email + '\n• *Ticket Number:* ' + (id_ticket || 'empty') + '\n• *Discord Ticket:* ' + (discord_ticket || 'empty') + '\n• *Categoria:* ' + categoria + '\n• *ISP:* ' + (isp || 'empty') + '\n• *Regiao:* ' + regiao + '\n• *Tipo Servidor:* ' + servidor + '\n• *Testes:* ' + testes } },
+      { type: 'section', text: { type: 'mrkdwn', text: '📁 *Document Page* - ' + tsId + '\n• *Assigned by:* ' + analista + '\n• *Aplicacao:* ' + jogo + '\n• *Client:* ' + clientOS + '\n• *Email:* ' + email + '\n• *Ticket Number:* ' + (id_ticket || 'empty') + '\n• *Discord Ticket:* ' + (discord_ticket || 'empty') + '\n• *Categoria:* ' + categoria + '\n• *ISP:* ' + (isp || 'empty') + '\n• *Regiao:* ' + regiao + '\n• *Tipo Servidor:* ' + servidor + '\n• *Testes:* ' + testes } },
       { type: 'section', text: { type: 'mrkdwn', text: '📋 *Request:*\n' + request } },
       { type: 'section', text: { type: 'mrkdwn', text: '_Use o comando_ `$done` _nesta thread para finalizar o ticket._' } },
     ]
   });
 
   ticketMap[msg.ts] = notionPage.id;
+});
+
+// Sincroniza mensagens e arquivos da thread pro Notion
+app.event('message', async ({ event, client }) => {
+  try {
+    // Ignora mensagens do proprio bot, mensagens sem thread e mensagens principais
+    if (event.bot_id) return;
+    if (!event.thread_ts) return;
+    if (event.thread_ts === event.ts) return;
+    if (event.subtype === 'bot_message') return;
+
+    const notionPageId = ticketMap[event.thread_ts];
+    if (!notionPageId) return;
+
+    // Busca nome do usuario
+    let userName = event.user || 'Desconhecido';
+    try {
+      const userInfo = await client.users.info({ user: event.user });
+      userName = userInfo.user.real_name || userInfo.user.name || event.user;
+    } catch (e) {}
+
+    const now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+
+    // Mensagem de texto
+    if (event.text && event.text.trim() && !/^\$done$/i.test(event.text.trim())) {
+      await notion.comments.create({
+        parent: { page_id: notionPageId },
+        rich_text: [{ type: 'text', text: { content: '💬 ' + userName + ' — ' + now + '\n' + event.text } }]
+      });
+    }
+
+    // Arquivos anexados
+    if (event.files && event.files.length > 0) {
+      for (const file of event.files) {
+        const tipo = file.mimetype || '';
+        let emoji = '📎';
+        if (tipo.startsWith('image/')) emoji = '🖼️';
+        else if (tipo.startsWith('video/')) emoji = '🎥';
+        else if (tipo.includes('text') || file.name.endsWith('.txt') || file.name.endsWith('.log')) emoji = '📄';
+
+        const comentario = emoji + ' ' + userName + ' — ' + now + '\n' +
+          'Arquivo: ' + file.name + '\n' +
+          'Tipo: ' + (file.mimetype || 'desconhecido') + '\n' +
+          'Ver no Slack: ' + file.permalink;
+
+        await notion.comments.create({
+          parent: { page_id: notionPageId },
+          rich_text: [{ type: 'text', text: { content: comentario } }]
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Erro ao sincronizar mensagem pro Notion:', err.message);
+  }
 });
 
 app.message(/^\$done$/i, async ({ message, client, say }) => {
