@@ -161,6 +161,25 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
   });
 
   ticketMap[msg.ts] = notionPage.id;
+
+  // Timer de aviso — 30 segundos para demo (mudar para horas em producao)
+  const TEMPO_AVISO = 30 * 1000;
+  const threadTs = msg.ts;
+  const channelId = msg.channel;
+
+  setTimeout(async () => {
+    if (!ticketMap[threadTs]) return;
+    try {
+      await app.client.chat.postMessage({
+        token: process.env.SLACK_BOT_TOKEN,
+        channel: channelId,
+        thread_ts: threadTs,
+        text: "⚠️ *Lembrete:* Este ticket ainda nao teve nenhuma interacao na thread. Alguem pode verificar?"
+      });
+    } catch (e) {
+      console.error("Erro ao enviar aviso de inatividade:", e.message);
+    }
+  }, TEMPO_AVISO);
 });
 
 // Sincroniza mensagens e arquivos da thread pro Notion
@@ -213,7 +232,7 @@ app.event('message', async ({ event, client }) => {
           parent: { page_id: notionPageId },
           rich_text: [
             { type: 'text', text: { content: emoji + ' ' + userName + ' — ' + now + '\n' } },
-            { type: 'text', text: { content: file.name + ' | Type: ' + (file.mimetype || 'desconhecido'), link: { url: file.permalink } } }
+            { type: 'text', text: { content: file.name + ' | Type: ' + (file.mimetype || 'desconhecido'), link: { url: file.permalink_public || file.permalink } } }
           ]
         });
       }
