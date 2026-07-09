@@ -37,17 +37,12 @@ const testesPorCategoria = {
 
 const ticketMap = {};
 const timerMap = {};
-
-const TEMPO_AVISO = 30 * 1000; // 30 segundos para demo — mudar para horas em producao
+const TEMPO_AVISO = 30 * 1000;
 
 function agendarAviso(threadTs, channelId) {
-  // Cancela timer anterior se existir
-  if (timerMap[threadTs]) {
-    clearTimeout(timerMap[threadTs]);
-  }
-  // Agenda novo aviso
+  if (timerMap[threadTs]) clearTimeout(timerMap[threadTs]);
   timerMap[threadTs] = setTimeout(async () => {
-    if (!ticketMap[threadTs]) return; // Ticket ja foi finalizado
+    if (!ticketMap[threadTs]) return;
     try {
       await app.client.chat.postMessage({
         token: process.env.SLACK_BOT_TOKEN,
@@ -56,7 +51,7 @@ function agendarAviso(threadTs, channelId) {
         text: '⚠️ *Lembrete:* Este ticket está sem interação na thread. Alguém pode verificar?'
       });
     } catch (e) {
-      console.error('Erro ao enviar aviso de inatividade:', e.message);
+      console.error('Erro ao enviar aviso:', e.message);
     }
   }, TEMPO_AVISO);
 }
@@ -141,7 +136,6 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
   const regiao = v.regiao.value.value;
   const isp = (v.isp.value && v.isp.value.value) || '';
   const servidor = v.servidor.value.selected_option.value;
-  const link_private = (v.link_private.value && v.link_private.value.value) || '';
   const gb = v.gb.value.value;
   const request = v.request.value.value;
   const analista = v.analista.value.selected_option.value;
@@ -168,7 +162,7 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
       'Tags': { multi_select: tags.map(t => ({ name: t })) },
       'Request': { rich_text: [{ text: { content: request } }] },
       'Assigned By': { rich_text: [{ text: { content: analista } }] },
-      'Criação': { date: { start: new Date().toISOString().split('T')[0] } }
+      'Criação': { date: { start: getTodayBRT() } }
     }
   });
 
@@ -185,26 +179,51 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
   });
 
   ticketMap[msg.ts] = notionPage.id;
-
-  // Agenda aviso de inatividade
   agendarAviso(msg.ts, msg.channel);
 });
 
+// Handler unificado de mensagens na thread
 app.event('message', async ({ event, client }) => {
   try {
     if (event.bot_id) return;
+    if (event.subtype === 'bot_message') return;
     if (!event.thread_ts) return;
     if (event.thread_ts === event.ts) return;
-    if (event.subtype === 'bot_message') return;
 
-    const notionPageId = ticketMap[event.thread_ts];
+    const threadTs = event.thread_ts;
+    const notionPageId = ticketMap[threadTs];
     if (!notionPageId) return;
 
-    // Reseta o timer de inatividade a cada mensagem na thread
-    if (event.channel) {
-      agendarAviso(event.thread_ts, event.channel);
+    const isDone = event.text && /^\$done$/i.test(event.text.trim());
+
+    if (isDone) {
+      // Cancela o timer
+      if (timerMap[threadTs]) {
+        clearTimeout(timerMap[threadTs]);
+        delete timerMap[threadTs];
+      }
+
+      // Atualiza Notion
+      await notion.pages.update({
+        page_id: notionPageId,
+        properties: {
+          'Status': { select: { name: 'Done' } },
+          'Finalização': { date: { start: new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') } }
+        }
+      });
+
+      // Reage no Slack
+      await client.reactions.add({ channel: event.channel, name: 'white_check_mark', timestamp: event.ts });
+      await client.reactions.add({ channel: event.channel, name: 'white_check_mark', timestamp: threadTs });
+
+      delete ticketMap[threadTs];
+      return;
     }
 
+    // Reseta timer de inatividade
+    agendarAviso(threadTs, event.channel);
+
+    // Busca nome do usuario
     let userName = event.user || 'Desconhecido';
     try {
       const userInfo = await client.users.info({ user: event.user });
@@ -221,15 +240,15 @@ app.event('message', async ({ event, client }) => {
       });
     } catch (e) {}
 
-    // Mensagem de texto
-    if (event.text && event.text.trim() && !/^\$done$/i.test(event.text.trim())) {
+    // Sincroniza mensagem de texto
+    if (event.text && event.text.trim()) {
       await notion.comments.create({
         parent: { page_id: notionPageId },
         rich_text: [{ type: 'text', text: { content: '💬 ' + userName + ' — ' + now + '\n' + event.text } }]
       });
     }
 
-    // Arquivos
+    // Sincroniza arquivos
     if (event.files && event.files.length > 0) {
       for (const file of event.files) {
         const tipo = file.mimetype || '';
@@ -248,38 +267,8 @@ app.event('message', async ({ event, client }) => {
       }
     }
   } catch (err) {
-    console.error('Erro ao sincronizar mensagem pro Notion:', err.message);
+    console.error('Erro ao processar mensagem:', err.message);
   }
-});
-
-app.message(/^\$done$/i, async ({ message, client, say }) => {
-  const threadTs = message.thread_ts;
-  if (!threadTs) {
-    await say({ text: 'Use $done dentro da thread de um ticket!', thread_ts: message.ts });
-    return;
-  }
-  const notionPageId = ticketMap[threadTs];
-  if (!notionPageId) {
-    await say({ text: 'Ticket nao encontrado. Verifique se esta na thread correta.', thread_ts: message.ts });
-    return;
-  }
-
-  // Cancela o timer de inatividade
-  if (timerMap[threadTs]) {
-    clearTimeout(timerMap[threadTs]);
-    delete timerMap[threadTs];
-  }
-
-  await notion.pages.update({
-    page_id: notionPageId,
-    properties: {
-      'Status': { select: { name: 'Done' } },
-      'Finalização': { date: { start: new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') } }
-    }
-  });
-  await client.reactions.add({ channel: message.channel, name: 'white_check_mark', timestamp: message.ts });
-  await client.reactions.add({ channel: message.channel, name: 'white_check_mark', timestamp: threadTs });
-  delete ticketMap[threadTs];
 });
 
 (async () => {
