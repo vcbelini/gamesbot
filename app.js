@@ -57,7 +57,7 @@ function buildModal2(categoria) {
       { type: 'section', text: { type: 'mrkdwn', text: '*Categoria:* ' + categoria } },
       { type: 'input', block_id: 'testes', optional: true, element: { type: 'checkboxes', action_id: 'value', options: testes }, label: { type: 'plain_text', text: 'Testes realizados' } },
       { type: 'divider' },
-      { type: 'input', block_id: 'solicitacao', optional: true, element: { type: 'datepicker', action_id: 'value', initial_date: today, placeholder: { type: 'plain_text', text: 'Selecionar data' } }, label: { type: 'plain_text', text: 'Data de solicitacao' } },
+      { type: 'section', block_id: 'solicitacao', text: { type: 'mrkdwn', text: 'Pick a date for the requisition.' }, accessory: { type: 'datepicker', action_id: 'value', initial_date: today, placeholder: { type: 'plain_text', text: 'Select date' } } },
       { type: 'input', block_id: 'jogo', element: { type: 'plain_text_input', action_id: 'value', placeholder: { type: 'plain_text', text: 'Ex: Valorant' } }, label: { type: 'plain_text', text: 'Nome do jogo' } },
       { type: 'input', block_id: 'client', element: { type: 'static_select', action_id: 'value', placeholder: { type: 'plain_text', text: 'Selecionar OS...' }, options: [{ text: { type: 'plain_text', text: 'Windows' }, value: 'Windows' }, { text: { type: 'plain_text', text: 'Android' }, value: 'Android' }, { text: { type: 'plain_text', text: 'iOS' }, value: 'iOS' }, { text: { type: 'plain_text', text: 'Site' }, value: 'Site' }] }, label: { type: 'plain_text', text: 'Client' } },
       { type: 'input', block_id: 'email', element: { type: 'plain_text_input', action_id: 'value', placeholder: { type: 'plain_text', text: 'cliente@email.com' } }, label: { type: 'plain_text', text: 'Email do cliente' } },
@@ -107,7 +107,7 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
   const testes = testesArr.map(o => o.value).join(', ') || 'Nenhum';
   const tagsArr = (v.tags.value && v.tags.value.selected_options) ? v.tags.value.selected_options : [];
   const tags = tagsArr.map(o => o.value);
-  const solicitacao = (v.solicitacao.value && v.solicitacao.value.selected_date) ? v.solicitacao.value.selected_date : getTodayBRT();
+  const solicitacao = (v.solicitacao && v.solicitacao.value && v.solicitacao.value.selected_date) ? v.solicitacao.value.selected_date : getTodayBRT();
   const jogo = v.jogo.value.value;
   const clientOS = v.client.value.selected_option.value;
   const email = v.email.value.value;
