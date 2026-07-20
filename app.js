@@ -218,7 +218,13 @@ app.event('message', async ({ event, client }) => {
         }
       });
 
-      // Reage no Slack com emoji especifico do comando
+      // Remove reacoes anteriores de comandos da mensagem principal
+      const todosEmojis = ['white_check_mark', 'hourglass_flowing_sand', 'zzz', 'x', 'rocket'];
+      for (const e of todosEmojis) {
+        try { await client.reactions.remove({ channel: event.channel, name: e, timestamp: threadTs }); } catch (_) {}
+      }
+
+      // Adiciona nova reacao com emoji especifico do comando
       await client.reactions.add({ channel: event.channel, name: emojiCmd, timestamp: event.ts });
       await client.reactions.add({ channel: event.channel, name: emojiCmd, timestamp: threadTs });
 
