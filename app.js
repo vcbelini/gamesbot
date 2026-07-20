@@ -174,7 +174,7 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
       { type: 'section', text: { type: 'mrkdwn', text: '*This document has been added to the Notion database*' } },
       { type: 'section', text: { type: 'mrkdwn', text: '📁 *Document Page* - ' + tsId + '\n• *Assigned by:* ' + analista + '\n• *Aplicacao:* ' + jogo + '\n• *Client:* ' + clientOS + '\n• *Email:* ' + email + '\n• *Ticket Number:* ' + (id_ticket || 'empty') + '\n• *Discord Ticket:* ' + (discord_ticket || 'empty') + '\n• *Categoria:* ' + categoria + '\n• *ISP:* ' + (isp || 'empty') + '\n• *Regiao:* ' + regiao + '\n• *Tipo Servidor:* ' + servidor + '\n• *Testes:* ' + testes } },
       { type: 'section', text: { type: 'mrkdwn', text: '📋 *Request:*\n' + request } },
-      { type: 'section', text: { type: 'mrkdwn', text: '_Use o comando_ `$done` _nesta thread para finalizar o ticket._' } },
+      { type: 'section', text: { type: 'mrkdwn', text: '_Use os comandos na thread:_ `$done` _resolvido_ | `$pending` _aguardando_ | `$inactive` _inativo_ | `$notsolved` _não resolvido_ | `$escalated` _escalado_' } },
     ]
   });
 
@@ -194,7 +194,16 @@ app.event('message', async ({ event, client }) => {
     const notionPageId = ticketMap[threadTs];
     if (!notionPageId) return;
 
-    const isDone = event.text && /^\$done$/i.test(event.text.trim());
+    const comandos = {
+      '$done': 'Done',
+      '$pending': 'Pending',
+      '$inactive': 'Inactive',
+      '$notsolved': 'Not Solved',
+      '$escalated': 'Escalated'
+    };
+    const textoMsg = event.text && event.text.trim().toLowerCase();
+    const statusFinal = comandos[textoMsg];
+    const isDone = !!statusFinal;
 
     if (isDone) {
       // Cancela o timer
@@ -207,7 +216,7 @@ app.event('message', async ({ event, client }) => {
       await notion.pages.update({
         page_id: notionPageId,
         properties: {
-          'Status': { select: { name: 'Done' } },
+          'Status': { select: { name: statusFinal } },
           'Finalização': { date: { start: new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') } }
         }
       });
