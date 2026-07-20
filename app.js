@@ -35,6 +35,12 @@ const testesPorCategoria = {
   ],
 };
 
+const aplicavelPorCategoria = {
+  'Acesso / Conectividade': '📌 *Aplicável para:*\n• timeout  • disconnect  • não conecta  • erro ao logar  • não cria conexão',
+  'Rota / Performance': '📌 *Aplicável para:*\n• ping alto  • packet loss  • instabilidade  • lag  • jitter  • rota ruim',
+  'Bloqueio / Autenticacao': '📌 *Aplicável para:*\n• launcher bloqueado  • anti-cheat  • login falhando  • jogo não abre',
+};
+
 const ticketMap = {};
 const timerMap = {};
 const TEMPO_AVISO = 30 * 1000;
@@ -74,6 +80,8 @@ function buildModal2(categoria) {
     close: { type: 'plain_text', text: 'Cancelar' },
     blocks: [
       { type: 'section', text: { type: 'mrkdwn', text: '*Categoria:* ' + categoria } },
+      { type: 'section', text: { type: 'mrkdwn', text: aplicavelPorCategoria[categoria] || '' } },
+      { type: 'divider' },
       { type: 'input', block_id: 'testes', optional: true, element: { type: 'checkboxes', action_id: 'value', options: testes }, label: { type: 'plain_text', text: 'Testes realizados' } },
       { type: 'divider' },
       { type: 'section', block_id: 'solicitacao', text: { type: 'mrkdwn', text: 'Pick a date for the requisition.' }, accessory: { type: 'datepicker', action_id: 'value', initial_date: today, placeholder: { type: 'plain_text', text: 'Select date' } } },
