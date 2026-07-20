@@ -195,14 +195,16 @@ app.event('message', async ({ event, client }) => {
     if (!notionPageId) return;
 
     const comandos = {
-      '$done': 'Done',
-      '$pending': 'Pending',
-      '$inactive': 'Inactive',
-      '$notsolved': 'Not Solved',
-      '$escalated': 'Escalated'
+      '$done':      { status: 'Done',       emoji: 'white_check_mark' },
+      '$pending':   { status: 'Pending',    emoji: 'hourglass_flowing_sand' },
+      '$inactive':  { status: 'Inactive',   emoji: 'zzz' },
+      '$notsolved': { status: 'Not Solved', emoji: 'x' },
+      '$escalated': { status: 'Escalated',  emoji: 'rocket' }
     };
     const textoMsg = event.text && event.text.trim().toLowerCase();
-    const statusFinal = comandos[textoMsg];
+    const match = comandos[textoMsg];
+    const statusFinal = match && match.status;
+    const emojiCmd = match && match.emoji;
     const isCommand = !!statusFinal;
     const isFinalCommand = textoMsg === '$done';
 
@@ -216,9 +218,9 @@ app.event('message', async ({ event, client }) => {
         }
       });
 
-      // Reage no Slack
-      await client.reactions.add({ channel: event.channel, name: 'white_check_mark', timestamp: event.ts });
-      await client.reactions.add({ channel: event.channel, name: 'white_check_mark', timestamp: threadTs });
+      // Reage no Slack com emoji especifico do comando
+      await client.reactions.add({ channel: event.channel, name: emojiCmd, timestamp: event.ts });
+      await client.reactions.add({ channel: event.channel, name: emojiCmd, timestamp: threadTs });
 
       // Só encerra o ticket completamente no $done
       if (isFinalCommand) {
