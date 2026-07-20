@@ -203,16 +203,11 @@ app.event('message', async ({ event, client }) => {
     };
     const textoMsg = event.text && event.text.trim().toLowerCase();
     const statusFinal = comandos[textoMsg];
-    const isDone = !!statusFinal;
+    const isCommand = !!statusFinal;
+    const isFinalCommand = textoMsg === '$done';
 
-    if (isDone) {
-      // Cancela o timer
-      if (timerMap[threadTs]) {
-        clearTimeout(timerMap[threadTs]);
-        delete timerMap[threadTs];
-      }
-
-      // Atualiza Notion
+    if (isCommand) {
+      // Atualiza Notion com o novo status
       await notion.pages.update({
         page_id: notionPageId,
         properties: {
@@ -225,7 +220,15 @@ app.event('message', async ({ event, client }) => {
       await client.reactions.add({ channel: event.channel, name: 'white_check_mark', timestamp: event.ts });
       await client.reactions.add({ channel: event.channel, name: 'white_check_mark', timestamp: threadTs });
 
-      delete ticketMap[threadTs];
+      // Só encerra o ticket completamente no $done
+      if (isFinalCommand) {
+        if (timerMap[threadTs]) {
+          clearTimeout(timerMap[threadTs]);
+          delete timerMap[threadTs];
+        }
+        delete ticketMap[threadTs];
+      }
+
       return;
     }
 
