@@ -114,7 +114,12 @@ app.command('/gs', async ({ ack, body, client }) => {
       submit: { type: 'plain_text', text: 'Proximo' },
       close: { type: 'plain_text', text: 'Cancelar' },
       blocks: [
-        { type: 'section', text: { type: 'mrkdwn', text: 'Selecione a categoria do problema para ver os testes especificos.' } },
+        { type: 'section', text: { type: 'mrkdwn', text: '*Selecione a categoria do problema:*' } },
+        { type: 'divider' },
+        { type: 'section', text: { type: 'mrkdwn', text: '🌐 *Acesso / Conectividade*\n• timeout  • disconnect  • não conecta  • erro ao logar  • não cria conexão' } },
+        { type: 'section', text: { type: 'mrkdwn', text: '📉 *Rota / Performance*\n• ping alto  • packet loss  • instabilidade  • lag  • jitter  • rota ruim' } },
+        { type: 'section', text: { type: 'mrkdwn', text: '🚫 *Bloqueio / Autenticação*\n• launcher bloqueado  • anti-cheat  • login falhando  • jogo não abre' } },
+        { type: 'divider' },
         { type: 'input', block_id: 'categoria', element: { type: 'static_select', action_id: 'value', placeholder: { type: 'plain_text', text: 'Selecionar categoria...' }, options: [{ text: { type: 'plain_text', text: 'Acesso / Conectividade' }, value: 'Acesso / Conectividade' }, { text: { type: 'plain_text', text: 'Rota / Performance' }, value: 'Rota / Performance' }, { text: { type: 'plain_text', text: 'Bloqueio / Autenticacao' }, value: 'Bloqueio / Autenticacao' }] }, label: { type: 'plain_text', text: 'Categoria' } },
       ]
     }
