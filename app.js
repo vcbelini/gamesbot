@@ -41,7 +41,7 @@ const aplicavelPorCategoria = {
   'Acesso / Conectividade': '📌 *Aplicável para:*\n• timeout  • disconnect  • não conecta  • erro ao logar  • não cria conexão',
   'Rota / Performance': '📌 *Aplicável para:*\n• ping alto  • packet loss  • instabilidade  • lag  • jitter  • rota ruim',
   'Bloqueio / Autenticacao': '📌 *Aplicável para:*\n• launcher bloqueado  • anti-cheat  • login falhando  • jogo não abre',
-  'Outros': '📌 *Aplicável para:*\n• qualquer problema que não se encaixe nas categorias acima',
+  'Outros': '📌 *Aplicável para:*\n• qualquer problema que não se encaixe nas outras categorias',
 };
 
 const ticketMap = {};
