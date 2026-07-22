@@ -144,7 +144,7 @@ app.command('/gs', async ({ ack, body, client }) => {
         { type: 'section', text: { type: 'mrkdwn', text: '🌐 *Acesso / Conectividade*\n• timeout  • disconnect  • não conecta  • erro ao logar  • não cria conexão' } },
         { type: 'section', text: { type: 'mrkdwn', text: '📉 *Rota / Performance*\n• ping alto  • packet loss  • instabilidade  • lag  • jitter  • rota ruim' } },
         { type: 'section', text: { type: 'mrkdwn', text: '🚫 *Bloqueio / Autenticação*\n• launcher bloqueado  • anti-cheat  • login falhando  • jogo não abre' } },
-        { type: 'section', text: { type: 'mrkdwn', text: '🗂️ *Outros*\n• qualquer problema que não se encaixe nas categorias acima' } },
+        { type: 'section', text: { type: 'mrkdwn', text: '🗂️ *Outros*\n• qualquer problema que não se encaixe nas outras categorias' } },
         { type: 'divider' },
         { type: 'input', block_id: 'categoria', element: { type: 'static_select', action_id: 'value', placeholder: { type: 'plain_text', text: 'Selecionar categoria...' }, options: [{ text: { type: 'plain_text', text: 'Acesso / Conectividade' }, value: 'Acesso / Conectividade' }, { text: { type: 'plain_text', text: 'Rota / Performance' }, value: 'Rota / Performance' }, { text: { type: 'plain_text', text: 'Bloqueio / Autenticacao' }, value: 'Bloqueio / Autenticacao' }, { text: { type: 'plain_text', text: 'Outros' }, value: 'Outros' }] }, label: { type: 'plain_text', text: 'Categoria' } },
       ]
