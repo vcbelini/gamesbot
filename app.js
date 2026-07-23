@@ -259,12 +259,18 @@ app.event('message', async ({ event, client }) => {
 
     if (isCommand) {
       // Atualiza Notion com o novo status
+      const propsAtualizadas = {
+        'Status': { select: { name: statusFinal } },
+      };
+      // Finalização só é preenchida quando o comando for $done -
+      // os outros status (pending, inactive, notsolved, escalated)
+      // não devem marcar o ticket como encerrado.
+      if (isFinalCommand) {
+        propsAtualizadas['Finalização'] = { date: { start: new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') } };
+      }
       await notion.pages.update({
         page_id: notionPageId,
-        properties: {
-          'Status': { select: { name: statusFinal } },
-          'Finalização': { date: { start: new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace(' ', 'T') } }
-        }
+        properties: propsAtualizadas
       });
 
       // Remove reacoes anteriores de comandos da mensagem principal
