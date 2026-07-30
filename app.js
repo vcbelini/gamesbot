@@ -251,7 +251,7 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
     await client.chat.postMessage({
       channel: msg.channel,
       thread_ts: msg.ts,
-      text: '🚨 <!subteam^S0BLY2ESDQW> ticket de jogo Top da ExitLag (' + jogo + ') — prioridade alta!'
+      text: '🚨 <!subteam^S0BLY2ESDQW> ticket de jogo Top 10 da ExitLag (' + jogo + ') — prioridade alta!'
     });
   }
 });
