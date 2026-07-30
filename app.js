@@ -44,6 +44,18 @@ const aplicavelPorCategoria = {
   'Outros': '📌 *Aplicável para:*\n• qualquer problema que não se encaixe nas outras categorias',
 };
 
+// EXEMPLO — lista fixa só pra demo. Em produção, isso deveria vir de uma
+// consulta em tempo real à fonte de dados de Top Jogos da ExitLag.
+const TOP_JOGOS_EXITLAG = [
+  'Discord', 'Fortnite', 'Counter-Strike 2', 'Valorant', 'League of Legends',
+  'Telegram', 'Roblox', 'World of Warcraft', 'Dead by Daylight', 'Overwatch',
+];
+
+function isTopJogo(nomeJogo) {
+  if (!nomeJogo) return false;
+  return TOP_JOGOS_EXITLAG.some(top => top.toLowerCase() === nomeJogo.trim().toLowerCase());
+}
+
 const ticketMap = {};
 const timerMap = {};
 const TEMPO_AVISO = 30 * 1000;
@@ -229,6 +241,19 @@ app.view('submit_ticket', async ({ ack, body, view, client }) => {
 
   ticketMap[msg.ts] = notionPage.id;
   agendarAviso(msg.ts, msg.channel);
+
+  // EXEMPLO: se o jogo estiver na lista de Top Jogos da ExitLag, sinaliza
+  // com sirene e chama o grupo @gamesdesktop na própria thread do ticket.
+  // Troca 'ID_DO_GRUPO_AQUI' pelo ID real do user group (Slack Admin →
+  // User Groups → @gamesdesktop, ou via API usergroups.list).
+  if (isTopJogo(jogo)) {
+    await client.reactions.add({ channel: msg.channel, name: 'rotating_light', timestamp: msg.ts });
+    await client.chat.postMessage({
+      channel: msg.channel,
+      thread_ts: msg.ts,
+      text: '🚨 <!subteam^ID_DO_GRUPO_AQUI> ticket de jogo Top da ExitLag (' + jogo + ') — prioridade alta!'
+    });
+  }
 });
 
 // Handler unificado de mensagens na thread
